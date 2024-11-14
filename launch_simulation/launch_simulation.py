@@ -5,6 +5,8 @@ In 2 dimensions, and with a time-dependent mass.
 Created on Thu 07 Dec 2023 at 14:50:30.
 Last modified [dd.mm.yyyy]: 14-11-2024.
 @author: Felipe Ortiz Villegas.
+
+Goals: To make this a Class, and along with that make it much more complex.
 """
 
 import numpy as np # maths
