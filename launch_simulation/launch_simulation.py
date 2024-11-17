@@ -54,15 +54,11 @@ def rho(y):
     return rho_0 * np.exp(-y/H)
 
 
-# def D_y(t, y, v, v_y):
-#     """
-#     Acceleration in the y-direction due to air resistance [m/s^2]
-#     as a function of time [s], altitude y [m], and velocity v, v_y [m/s]
-#     """
-#     return -0.5 * C_D * A * rho(y) * v * v_y
-
 def D_i(y, v, v_i):
-    """Drag in the i-Direction"""
+    """Drag in the i-Direction
+
+    as a function of time [s], altitude y [m], and velocity v, v_i [m/s]
+    """
     return -0.5 * C_D * A * rho(y) * v * v_i
 
 # ======================== Numerical implementation ========================= #
@@ -167,21 +163,15 @@ v_y = v_y[:n]
 a_y = a_y[:n]
 
 
-# ============================== Data analysis ============================== #
-
 # Apogee
 n_a = np.argmax(y) # Index at apogee
 
 
-# =========================== Printing of results =========================== #
 
 print('\n---------------------------------\n')
 print('Apogee time:\t', t[n_a], 's')
 print('... altitude:\t', round(y[n_a])/1000, 'km')
 print('\n---------------------------------\n')
-
-
-# =========================== Plotting of results =========================== #
 
 # Close all currently open figures, so we avoid mixing up old and new figures.
 plt.close('all')
