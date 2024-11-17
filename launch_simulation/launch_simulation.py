@@ -54,14 +54,16 @@ def rho(y):
     return rho_0 * np.exp(-y/H)
 
 
-def D_y(t, y, v, v_y):
-    """
-    Acceleration in the y-direction due to air resistance [m/s^2]
-    as a function of time [s], altitude y [m], and velocity v, v_y [m/s]
-    """
-    return -0.5 * C_D * A * rho(y) * v * v_y
+# def D_y(t, y, v, v_y):
+#     """
+#     Acceleration in the y-direction due to air resistance [m/s^2]
+#     as a function of time [s], altitude y [m], and velocity v, v_y [m/s]
+#     """
+#     return -0.5 * C_D * A * rho(y) * v * v_y
 
-
+def D_i(y, v, v_i):
+    """Drag in the i-Direction"""
+    return -0.5 * C_D * A * rho(y) * v * v_i
 
 # ======================== Numerical implementation ========================= #
 
@@ -72,12 +74,21 @@ N = int(np.ceil(t_f/dt))
 #T_y = T_0*np.sin(theta_0)
 T_y = T_0 # In 1 dimension, we are always firing straight up.
 
+# Under the assumption of constant thrust:
+T_x = T_0*np.cos(theta_0)
+T_y = T_0*np.sin(theta_0)
+
 
 # Create data lists
 # Except for the time list, all lists are initialized as lists of zeros.
 t = np.arange(t_f, step=dt) # runs from 0 to t_f with step length dt
 y = np.zeros(N)
+x = np.zeros(N)
+
+v_x = np.zeros(N)
 v_y = np.zeros(N)
+
+a_x = np.zeros(N)
 a_y = np.zeros(N)
 
 
@@ -95,15 +106,18 @@ while t[n] < t_b and n < n_max:
     # Values needed for Euler's method
     # ---------------------------------- #
     # Speed
-    v = np.sqrt(v_y[n]**2) # Powers, like a^2, is written a**2
+    v = np.sqrt(v_x[n]**2 + v_y[n]**2) 
+    
     
     # Acceleration
-    a_y[n] = ( T_y + D_y(t[n], y[n], v, v_y[n]) )/ m(t[n]) - g
+    a_x[n] = ( T_x + D_i(y[n], v, v_x[n]) )/ m(t[n])
+    a_y[n] = ( T_y + D_i(t[n], y[n], v, v_y[n]) )/ m(t[n]) - g
     
     
     # Euler's method:
     # ---------------------------------- #
     # Position
+    x[n+1] = x[n] + v_x[n]*dt
     y[n+1] = y[n] + v_y[n]*dt
     
     # Velocity
@@ -125,7 +139,8 @@ while y[n] >= 0 and n < n_max:
     v = np.sqrt(v_y[n]**2)
     
     # Acceleration
-    a_y[n] = D_y(t[n], y[n], v, v_y[n]) / m_f - g
+    a_x[n] = D_i(y[n], v, v_x[n]) / m_f
+    a_y[n] = D_i(t[n], y[n], v, v_y[n]) / m_f - g
     
     
     # Euler's method:
