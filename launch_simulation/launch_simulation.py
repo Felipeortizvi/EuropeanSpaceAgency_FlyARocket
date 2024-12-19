@@ -18,23 +18,20 @@ import matplotlib.pyplot as plt # plotting
 # ========================= Constants & parameters ========================== #
 
 # Constants
-g = 9.81				# gravitational acceleration [m/s^2]
-rho_0 = 1.225			# air density at sea level [kg/m^3]
-H = np.inf	        	# scale height [m]. Hint to 3a: np.inf = positive infinity
-C_D = 0.5				# drag coefficient of the rocket [-]
-A = 1.0e-2          	# rocket body frontal area [m^2]. "e-2" is short for "*10**(-2)"
-m_0 = 20.000			# wet mass of the rocket [kg]
-m_f = 20.000			# dry mass of the rocket [kg]
-T_0 = 9000.1		    # average rocket engine thrust [N]
-t_b = 6.0		    	# burn time [s]
-theta_0 = 90*np.pi/180  # launch angle [rad]. Not used in 1D.
-
+g = 9.81                # gravitational acceleration [m/s^2]
+rho_0 = 1.225           # air density at sea level [kg/m^3]
+H = 7700.0              # scale height [m]
+C_D = 0.51              # drag coefficient of the rocket [-]
+A = 1.081e-2            # rocket body frontal area [m^2]. 1.081 dm^2 = 1.081e-2 m^2
+m_0 = 19.765            # wet mass of the rocket [kg]
+m_f = 11.269            # dry mass of the rocket [kg]
+T_0 = 2501.8            # average rocket engine thrust [N]
+t_b = 6.09              # burn time [s]
+theta_0 = 75 * np.pi / 180  # launch angle [rad]
 
 # Simulation parameters
-dt = 0.01				# simulation time step [s]
-#t_0 = 0                 # simulation start [s]; not needed when we start at 0
-t_f = 131				# simulation time end [s]
-
+dt = 0.001              # simulation time step [s]
+t_f = 180.0             # simulation end time [s]
 
 
 # ================================ Functions ================================ #
@@ -82,10 +79,8 @@ T_y = T_0*np.sin(theta_0)
 t = np.arange(t_f, step=dt) # runs from 0 to t_f with step length dt
 y = np.zeros(N)
 x = np.zeros(N)
-
 v_x = np.zeros(N)
 v_y = np.zeros(N)
-
 a_x = np.zeros(N)
 a_y = np.zeros(N)
 
@@ -106,11 +101,9 @@ while t[n] < t_b and n < n_max:
     # Speed
     v = np.sqrt(v_x[n]**2 + v_y[n]**2) 
     
-    
     # Acceleration
-    a_x[n] = ( T_x + D_i(y[n], v, v_x[n]) )/ m(t[n])
-    a_y[n] = ( T_y + D_i(t[n], y[n], v, v_y[n]) )/ m(t[n]) - g
-    
+    a_x[n] = ( T_x + D_i(y[n], v, v_x[n]) ) / m(t[n])
+    a_y[n] = ( T_y + D_i(y[n], v, v_y[n]) ) / m(t[n]) - g  
     
     # Euler's method:
     # ---------------------------------- #
@@ -119,8 +112,8 @@ while t[n] < t_b and n < n_max:
     y[n+1] = y[n] + v_y[n]*dt
     
     # Velocity
+    v_x[n+1] = v_x[n] + a_x[n]*dt
     v_y[n+1] = v_y[n] + a_y[n]*dt
-    
     
     # Advance n with 1
     n += 1
@@ -134,20 +127,22 @@ while y[n] >= 0 and n < n_max:
     # Values needed for Euler's method
     # ---------------------------------- #
     # Speed
-    v = np.sqrt(v_y[n]**2)
+    v = np.sqrt(v_x[n]**2 + v_y[n]**2) 
     
     # Acceleration
     a_x[n] = D_i(y[n], v, v_x[n]) / m_f
-    a_y[n] = D_i(t[n], y[n], v, v_y[n]) / m_f - g
+    a_y[n] = D_i(y[n], v, v_y[n]) / m_f - g
     
     
     # Euler's method:
     # ---------------------------------- #
     # Position
     y[n+1] = y[n] + v_y[n]*dt
+    x[n+1] = x[n] + v_x[n]*dt
     
     # Velocity
     v_y[n+1] = v_y[n] + a_y[n]*dt
+    v_x[n+1] = v_x[n] + a_x[n]*dt
     
     
     # Advance n with 1
@@ -160,28 +155,40 @@ while y[n] >= 0 and n < n_max:
 # has crashed (or it has reached its maximum value). Since we don't need the
 # data after n, we redefine our lists to include only the points from 0 to n:
 t = t[:n]
+x = x[:n]
 y = y[:n]
+v_x = v_x[:n]
 v_y = v_y[:n]
+a_x = a_x[:n]
 a_y = a_y[:n]
 
+
+# ============================== Data analysis ============================== #
+
+# Burnout
+n_b = np.argmin(np.abs(t - t_b)) # Index where t is closest to t_b
 
 # Apogee
 n_a = np.argmax(y) # Index at apogee
 
+# Speed
+v = np.sqrt(v_x**2 + v_y**2)
 
+
+
+
+# =========================== Printing of results =========================== #
 
 print('\n---------------------------------\n')
+print('Burnout time:\t', t[n_b] ,'s') # Should be close or equal to t_b
+print('... altitude:\t', round(y[n_b]), 'm')
+print('... speed:\t\t', round(v[n_b]), 'm/s')
+print('')
 print('Apogee time:\t', t[n_a], 's')
-print('... altitude:\t', round(y[n_a])/1000, 'km')
+print('... altitude:\t', round(y[n_a]), 'm')
+print('... speed:\t\t', round(v[n_a]), 'm/s') # For debugging purposes
+print('')
+print('Final time:\t\t', t[-1], 's')
+print('... altitude:\t', round(y[-1]), 'm')
+print('... speed:\t\t', round(v[-1]), 'm/s')
 print('\n---------------------------------\n')
-
-# Close all currently open figures, so we avoid mixing up old and new figures.
-plt.close('all')
-
-# Trajectory
-plt.figure('Trajectory')
-plt.plot(t, y)
-plt.xlabel("Time [s]")
-plt.ylabel("Altitude [m]")
-plt.grid(linestyle='--')
-plt.show()
